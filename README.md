@@ -137,6 +137,16 @@ mined-counter/
 └── LICENSE
 ```
 
+## 发布新版本
+
+1. 修改 `src/main/resources/fabric.mod.json` 和 `build.ps1` 里的版本号。
+2. 重新运行 `build.ps1`。
+3. 提交并推送 `main`。
+4. 打 tag 并推送：`git tag v1.1.1`、`git push origin v1.1.1`。
+5. GitHub Actions 会自动创建 Release 并上传 `dist/mined-counter-1.1.1.jar`。
+
+发布说明放在 `.github/release-notes/<tag>.md`，文件名必须和 tag 完全一致。
+
 ## 已知限制
 
 - 边栏标题固定为“挖掘榜”（黄色 + 下划线），暂不可配置。
