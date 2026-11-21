@@ -1,0 +1,19 @@
+# build output
+build/
+run/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# logs / crash dumps
+*.log
+logs/
+crash-reports/
+
+# OS
+.DS_Store
+Thumbs.db

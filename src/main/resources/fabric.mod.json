@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "mined_counter",
+  "version": "1.1.0",
+  "name": "Mined Counter",
+  "description": "统计每位玩家挖掘方块的总次数，右侧计分板即时显示挖掘榜。只需装在服务端。Counts every block each player mines and shows a live leaderboard sidebar. Server-side only.",
+  "authors": [
+    "Galaxy-1118"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Galaxy-1118/mined-counter",
+    "sources": "https://github.com/Galaxy-1118/mined-counter",
+    "issues": "https://github.com/Galaxy-1118/mined-counter/issues"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "minedcounter.MinedCounter"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "~26.1.2"
+  },
+  "recommends": {
+    "fabric-api": "*"
+  }
+}
