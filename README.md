@@ -27,7 +27,8 @@ scoreboard objectives add stone_mined minecraft.mined:minecraft.stone
 
 ## 功能
 
-- **即时统计**：方块破坏后立刻 +1，不是每分钟轮询。
+- **即时统计**：有效采集后立刻 +1，不是每分钟轮询。
+- **与原版统计对齐**：生存模式只统计使用正确工具、能正常掉落的方块，和 `minecraft.mined` 的判定一致。
 - **零配置可用**：放进 `mods` 重启服务器，默认自动出现“挖掘榜”。
 - **标题可定制**：支持经典 `&` 格式代码，也支持 JSON 文本组件；颜色、粗体、下划线、斜体、删除线等都可以设置。
 - **位置可切换**：`sidebar`（右侧）、`list`（Tab 列表）、`below_name`（玩家名字下方）。
@@ -75,6 +76,7 @@ server/
 - 旧指令 `/minedcount` 已改名为 `/minedcounter`，旧的命令名不再注册；
 - 计分项和已有分数保留；首次启动会生成 `config/mined_counter.json`，默认标题是 `&e&n挖掘榜`；
 - 如果你之前用指令改过计分板显示名，升级后会被配置文件中的标题覆盖，改回即可。
+- 旧版本可能已经记录了徒手挖石头、错误工具挖矿或创造模式破坏的分数；升级后建议执行一次 `/minedcounter init`，按原版统计重建并清理这些不符合新规则的分数。
 
 ## 指令
 
@@ -181,6 +183,34 @@ server/
 
 **注意**：打开后，`/minedcounter init` 无法从原版统计恢复创造模式产生的分数，重建时这部分会被清掉。这是原版统计不记录创造模式导致的，不是模组可以无损补回的；如果以后需要“创造/生存分开统计”，需要额外维护第二个计分项或数据文件，会明显增加复杂度，本版本没有这样做。
 
+## 有效采集条件（为什么徒手挖石头不计分）
+
+为了和原版 `minecraft.mined` 统计、`/minedcounter init` 对齐，生存模式只有在类似以下条件成立时才 +1：
+
+```text
+ServerPlayer.hasCorrectToolForDrops(state) == true
+```
+
+原版 `ServerPlayerGameMode.destroyBlock` 也只在同一条件成立时才调用 `Block.playerDestroy`，而 `Stats.BLOCK_MINED` 正是在 `playerDestroy` 里累加的。因此：
+
+- 徒手挖石头、用木镐挖钻石矿等**不会**计分，也不会进入原版统计；
+- 徒手挖泥土、沙子等不需要工具的方块**会**计分（原版也会记录）；
+- 爆炸、活塞、自然消失不计入。
+
+创造模式默认不计数；`/minedcounter creative on` 后，创造模式的所有破坏都会计数（不再检查工具），但这部分无法被 `init` 从原版统计恢复，原因见上一节。
+
+这样修改后，生存模式的实时榜单和 `/minedcounter init` 重建结果来自同一套判定，不会再出现“实时有分、init 后消失”的情况。
+
+## 为什么不撤销 init
+
+修复后，`init` 和实时计数都只认“原版统计会记录的有效采集”，所以 `init` 可以安全保留：
+
+- 新服/新世界：不执行 `init`，模组就从部署时开始记录；
+- 旧版本升级：执行一次 `init`，可以按原版统计清理旧版本误计的无效采集/创造模式分数；
+- 需要离线玩家数据：`init` 是唯一能从 `world/players/stats` 重建历史数据的入口。
+
+如果你希望“只从部署模组时开始记录”，不执行 `init` 即可；模组不会自动运行它。
+
 ## 初始化计分板
 
 `/minedcounter init` 会：
@@ -200,6 +230,7 @@ server/
 注意事项：
 
 - **只统计玩家破坏方块**；爆炸、活塞、自然消失不计入。
+- 生存模式只统计使用正确工具、能正常掉落的采集；徒手挖石头等无效采集不会计分，详见“有效采集条件”。
 - 默认会读取所有离线统计文件，可能产生一次性的磁盘 I/O 和短暂卡顿；大服建议在低峰期执行，或使用 `/minedcounter init online`。
 - 离线玩家必须能在 `usercache.json` 里找到名字，否则会被跳过。
 - 该指令不会自动运行，只在你手动执行时发生。
@@ -293,6 +324,7 @@ mined-counter/
 ## 已知限制
 
 - 只统计总量，不按方块种类细分。
+- 生存模式不统计徒手挖石头、错误工具挖矿等无效采集，以保持与原版统计、`init` 一致。
 - 会强制占用所选显示位；与其他同位置计分板模组冲突。
 - 标题 JSON 使用标准文本组件解析，但指令回显只有中文/英文两种语言。
 - 指令权限固定为等级 2，没有更细的权限节点。
@@ -353,7 +385,8 @@ Target: **Minecraft 26.1.2** + **Fabric Loader 0.19.2**, Java 21+.
 
 ## Features
 
-- Instant counting on block break (no polling loop).
+- Instant counting on valid harvests (no polling loop).
+- Survival counting uses the same `hasCorrectToolForDrops` condition as vanilla `Stats.BLOCK_MINED`, so wrong-tool breaks such as punching stone do not score.
 - Creates `minedcounter_total` and attaches it to the configured display slot automatically.
 - Titles support classic `&` codes and standard JSON text components.
 - Display positions: `sidebar`, `list`, `below_name`.
@@ -375,7 +408,7 @@ Target: **Minecraft 26.1.2** + **Fabric Loader 0.19.2**, Java 21+.
 3. Put `mined-counter-1.2.0.jar` into `mods/`.
 4. Restart the server.
 
-Upgrading from 1.1.0: replace the jar. The old objective is migrated automatically; a config file is generated on first start. The command was renamed from `/minedcount` to `/minedcounter`.
+Upgrading from 1.1.0: replace the jar. The old objective is migrated automatically; a config file is generated on first start. The command was renamed from `/minedcount` to `/minedcounter`. If an older build already counted invalid or creative breaks, run `/minedcounter init` once after upgrading to rebuild from vanilla stats.
 
 ## Commands
 
@@ -444,13 +477,34 @@ Commands write these values back. Manual edits take effect after `/minedcounter 
 
 The default `countCreative=false` ignores creative block breaks. This keeps live scores consistent with vanilla `Stats.BLOCK_MINED` (which does not record creative breaks), so `/minedcounter init` does not silently drop creative-only points.
 
-If enabled, creative breaks are counted live, but `/minedcounter init` cannot restore them from vanilla stats; they will be cleared on rebuild.
+If enabled, creative breaks are counted live (all of them, without the tool check), but `/minedcounter init` cannot restore them from vanilla stats; they will be cleared on rebuild.
+
+## Valid harvests
+
+In survival, a break only scores when `ServerPlayer.hasCorrectToolForDrops(state)` is true. Vanilla `ServerPlayerGameMode.destroyBlock` uses the same condition before calling `Block.playerDestroy`, and that is where `Stats.BLOCK_MINED` is incremented. Consequences:
+
+- Punching stone or mining diamond ore with a wooden pickaxe does not score (vanilla does not record it either).
+- Punching dirt or sand does score (no tool is required, and vanilla records it).
+- Explosions, pistons and natural decay do not score.
+
+This keeps the live survival board and `/minedcounter init` based on the same set of blocks.
+
+## Why init stays
+
+After this fix, both live counting and `init` use the same "valid harvest" definition, so `init` remains safe:
+
+- New server/world: don't run `init`; counting starts when the mod is deployed.
+- Upgrading from an older build: run `init` once to rebuild from vanilla stats and clean up scores that were counted under the old rules.
+- Offline players: `init` is the only path that rebuilds their history from `world/players/stats`.
+
+If you want "count from deployment only", simply don't run `init`; it never runs automatically.
 
 ## Init semantics
 
 `/minedcounter init` removes and recreates `minedcounter_total`, reads live online stats, then scans `world/players/stats/*.json` for offline players and maps UUIDs through `usercache.json`. Block mining stats are summed per player.
 
 - Only player block breaks are counted.
+- Survival counting only includes valid harvests (correct tool / normal drops); invalid breaks such as punching stone are ignored.
 - Reading all offline stats is a one-time I/O cost; on very large servers use `/minedcounter init online` and run at low traffic.
 - Offline players missing from `usercache.json` are skipped.
 
@@ -468,7 +522,7 @@ Command feedback is Chinese for `zh_*` clients and English otherwise. Console/RC
 | Java | 21+ |
 | Side | server / singleplayer |
 
-The mod owns the configured display slot and will conflict with other scoreboard mods using the same slot. Only block breaks are counted; explosions and pistons are ignored.
+The mod owns the configured display slot and will conflict with other scoreboard mods using the same slot. Only block breaks are counted; explosions and pistons are ignored. Survival only counts valid harvests, matching vanilla statistics.
 
 ## Fake players and case sensitivity
 

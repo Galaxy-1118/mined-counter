@@ -73,7 +73,15 @@ public final class CounterHook {
             if (!config.enabled || level.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
                 return;
             }
-            if (serverPlayer.isCreative() && !config.countCreative) {
+            boolean creative = serverPlayer.isCreative();
+            if (creative && !config.countCreative) {
+                return;
+            }
+            // Vanilla awards Stats.BLOCK_MINED from Block.playerDestroy, which
+            // ServerPlayerGameMode only calls when the held item is the correct
+            // tool for drops. Match that condition so /minedcounter init and the
+            // live counter describe the same set of blocks.
+            if (!creative && !serverPlayer.hasCorrectToolForDrops(state)) {
                 return;
             }
             Scoreboard scoreboard = level.getScoreboard();

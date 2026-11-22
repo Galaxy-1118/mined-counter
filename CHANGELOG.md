@@ -16,6 +16,7 @@
 - 指令名从 `/minedcount` 统一为 `/minedcounter`。
 - 计分项名从 `minecount_total` 统一为 `minedcounter_total`；启动时自动复制旧分数并删除旧计分项，不会清空榜单。
 - 默认忽略创造模式破坏方块，使实时计数与原版 `Stats.BLOCK_MINED`、`/minedcounter init` 保持一致。
+- 生存模式按 `ServerPlayer.hasCorrectToolForDrops(state)` 过滤：徒手挖石头、错误工具挖矿等无效采集不再计分，和原版 `minecraft.mined` 统计、`/minedcounter init` 使用同一条件。
 - 计分板显示逻辑改为根据配置管理显示位，并区分“统计开关”和“显示开关”。
 - 每 20 tick 的检查只维护目标显示位，不遍历玩家。
 
