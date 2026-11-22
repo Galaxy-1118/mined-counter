@@ -19,7 +19,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            dist/mined-counter-*.jar \
+          JAR="dist/mined-counter-${GITHUB_REF_NAME#v}.jar"
+          test -f "$JAR"
+          gh release create "$GITHUB_REF_NAME" "$JAR" \
             --title "Mined Counter $GITHUB_REF_NAME" \
             --notes-file ".github/release-notes/$GITHUB_REF_NAME.md"

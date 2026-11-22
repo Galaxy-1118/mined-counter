@@ -15,20 +15,25 @@ public class MinedCounter implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        if (!fabricApiPresent()) {
+        FabricLoader loader = FabricLoader.getInstance();
+        boolean eventsPresent = loader.isModLoaded("fabric-api")
+                || (loader.isModLoaded("fabric-events-interaction-v0")
+                && loader.isModLoaded("fabric-lifecycle-events-v1"));
+        if (!eventsPresent) {
             LOGGER.warn("[mined_counter] Fabric API not found on this side - mod stays inactive. "
                     + "Add fabric-api to the mods folder (server side) to enable the mined counter.");
             return;
         }
-        // Deliberately in a separate class: CounterHook touches Fabric API types,
-        // so it must not be loaded when the API is absent.
-        CounterHook.register();
-    }
 
-    private static boolean fabricApiPresent() {
-        FabricLoader loader = FabricLoader.getInstance();
-        return loader.isModLoaded("fabric-api")
-                || loader.isModLoaded("fabric-events-interaction-v0")
-                || loader.isModLoaded("fabric-lifecycle-events-v1");
+        // Load the config first: commands and the event hooks both read it.
+        CounterHook.initialize();
+
+        if (loader.isModLoaded("fabric-api") || loader.isModLoaded("fabric-command-api-v2")) {
+            MinedCountCommand.register();
+        } else {
+            LOGGER.warn("[mined_counter] fabric-command-api-v2 is missing - /minedcount commands are disabled.");
+        }
+
+        LOGGER.info("[mined_counter] loaded; config file: config/mined_counter.json");
     }
 }

@@ -27,7 +27,7 @@ param(
 
     [string]$JdkHome = $(if ($env:JAVA_HOME) { $env:JAVA_HOME } else { 'D:\JDK25' }),
 
-    [string]$Version = '1.1.0'
+    [string]$Version = '1.2.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -99,10 +99,16 @@ try {
 if ($nested -eq 0) { throw "Fabric API bundle has no META-INF/jars entries: $apiJar" }
 "nested api jars: $nested"
 
-$extra = @('slf4j-api', 'guava', 'fastutil', 'datafixerupper', 'brigadier', 'commons-lang3', 'gson', 'authlib')
+$extra = @('slf4j-api', 'guava', 'fastutil', 'datafixerupper', 'brigadier', 'commons-lang3', 'gson', 'authlib', 'jspecify', 'error_prone_annotations')
 $libRoot = Join-Path $mcDir 'libraries'
+function Get-LibraryVersion($file) {
+    $match = [regex]::Match($file.Name, '\d+(\.\d+)+')
+    if ($match.Success) { return [version]$match.Value }
+    return [version]'0.0'
+}
 foreach ($name in $extra) {
     $hit = Get-ChildItem -LiteralPath $libRoot -Recurse -File -Filter "$name*.jar" -ErrorAction SilentlyContinue |
+        Sort-Object { Get-LibraryVersion $_ } -Descending |
         Select-Object -First 1
     if ($hit) {
         Copy-Item -LiteralPath $hit.FullName -Destination (Join-Path $libsDir $hit.Name) -Force
