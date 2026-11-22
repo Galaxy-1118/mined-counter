@@ -1,24 +1,170 @@
 package minedcounter;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
 
 /**
- * Parses a small, chat-friendly formatting language for the sidebar title.
+ * Parses the title argument. Two formats are accepted:
  *
- * <p>Supported codes are the classic ampersand codes: {@code &0}-{@code &f}
- * colours, {@code &l} bold, {@code &n} underline, {@code &o} italic,
- * {@code &m} strikethrough, {@code &k} obfuscated and {@code &r} reset.
- * {@code &&} produces a literal ampersand. The section sign ({@code §}) is
- * accepted as an alias for {@code &} so titles copied from existing MOTD or
- * scoreboard strings keep working.</p>
+ * <ul>
+ *   <li>classic ampersand codes: {@code &6&l&n挖掘榜};</li>
+ *   <li>a JSON text component, e.g.
+ *       {@code {"text":"挖掘榜","color":"yellow","underlined":true}}.
+ *       A style-only object such as {@code {color:"yellow";underlined:true}}
+ *       is applied to the current title text.</li>
+ * </ul>
+ *
+ * <p>The JSON parser is deliberately lenient: unquoted keys, single quotes and
+ * semicolon separators are normalised so the short form shown in the README
+ * works in chat.</p>
  */
 final class TitleParser {
+    private static final Gson GSON = new GsonBuilder()
+            .disableHtmlEscaping()
+            .create();
+    private static final String DEFAULT_TEXT = "挖掘榜";
+
     private TitleParser() {
     }
 
+    static boolean looksLikeJson(String raw) {
+        if (raw == null) {
+            return false;
+        }
+        String trimmed = raw.trim();
+        return trimmed.startsWith("{") || trimmed.startsWith("[");
+    }
+
+    /** Auto-detects JSON first, then falls back to the classic &-code parser. */
     static Component parse(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return Component.empty();
+        }
+        if (looksLikeJson(raw)) {
+            Component json = parseJson(raw, DEFAULT_TEXT);
+            if (json != null) {
+                return json;
+            }
+        }
+        return parseLegacy(raw);
+    }
+
+    /**
+     * Parses a JSON component. When the object has no content field (style-only
+     * JSON), {@code fallbackText} is inserted as its text.
+     *
+     * @return the parsed component, or {@code null} if the JSON is invalid
+     */
+    static Component parseJson(String raw, String fallbackText) {
+        JsonElement element = parseLenient(raw);
+        if (element == null || element.isJsonNull()) {
+            return null;
+        }
+        if (element.isJsonObject()) {
+            JsonObject object = element.getAsJsonObject();
+            if (!hasContent(object)) {
+                object.addProperty("text", textOrDefault(fallbackText));
+            }
+            element = object;
+        }
+        try {
+            DataResult<Component> result = ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, element);
+            return result.result().orElse(null);
+        } catch (RuntimeException exception) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns a canonical JSON string with a text field added to style-only
+     * objects, or {@code null} if the input is not a valid component.
+     */
+    static String canonicalJson(String raw, String fallbackText) {
+        JsonElement element = parseLenient(raw);
+        if (element == null || element.isJsonNull()) {
+            return null;
+        }
+        if (element.isJsonObject()) {
+            JsonObject object = element.getAsJsonObject();
+            if (!hasContent(object)) {
+                object.addProperty("text", textOrDefault(fallbackText));
+            }
+            element = object;
+        }
+        Component parsed = parseJson(GSON.toJson(element), fallbackText);
+        if (parsed == null) {
+            return null;
+        }
+        return GSON.toJson(element);
+    }
+
+    static String plainText(String raw) {
+        return parse(raw).getString();
+    }
+
+    private static String textOrDefault(String fallbackText) {
+        return fallbackText == null || fallbackText.isBlank() ? DEFAULT_TEXT : fallbackText;
+    }
+
+    private static boolean hasContent(JsonObject object) {
+        return object.has("text")
+                || object.has("translate")
+                || object.has("keybind")
+                || object.has("score")
+                || object.has("selector")
+                || object.has("nbt")
+                || object.has("extra")
+                || object.has("type");
+    }
+
+    private static JsonElement parseLenient(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        try {
+            return JsonParser.parseString(normalizeSeparators(raw));
+        } catch (RuntimeException exception) {
+            return null;
+        }
+    }
+
+    /** Gson tolerates unquoted keys, but not semicolons used as separators. */
+    private static String normalizeSeparators(String raw) {
+        StringBuilder result = new StringBuilder(raw.length());
+        boolean quoted = false;
+        boolean escaped = false;
+        for (int i = 0; i < raw.length(); i++) {
+            char current = raw.charAt(i);
+            if (escaped) {
+                result.append(current);
+                escaped = false;
+                continue;
+            }
+            if (quoted && current == '\\') {
+                result.append(current);
+                escaped = true;
+                continue;
+            }
+            if (current == '"') {
+                quoted = !quoted;
+                result.append(current);
+                continue;
+            }
+            result.append(!quoted && current == ';' ? ',' : current);
+        }
+        return result.toString();
+    }
+
+    private static Component parseLegacy(String raw) {
         MutableComponent result = Component.empty();
         if (raw == null || raw.isEmpty()) {
             return result;
@@ -47,11 +193,6 @@ final class TitleParser {
         }
         flush(result, text, style);
         return result;
-    }
-
-    /** Visible text without any formatting codes, used to reject empty titles. */
-    static String plainText(String raw) {
-        return parse(raw).getString();
     }
 
     private static void flush(MutableComponent result, StringBuilder text, StyleState style) {

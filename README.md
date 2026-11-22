@@ -23,22 +23,25 @@ scoreboard objectives add stone_mined minecraft.mined:minecraft.stone
 
 想统计“所有方块一共挖了多少”，原版没有现成准则。常见做法是为每种方块建一个计分项再用函数求和，或者用数据包定时轮询——配置麻烦，种类多了还会明显增加开销。
 
-这个模组换了个做法：监听方块破坏事件，**在方块被挖掉的瞬间直接给玩家 +1**。只有一个计分项，不需要数据包；标题、位置、开关和初始化都可以用 `/minedcount` 管理。
+这个模组换了个做法：监听方块破坏事件，**在方块被挖掉的瞬间直接给玩家 +1**。只有一个计分项 `minedcounter_total`，不需要数据包；标题、位置、开关和初始化都可以用 `/minedcounter` 管理。
 
 ## 功能
 
 - **即时统计**：方块破坏后立刻 +1，不是每分钟轮询。
 - **零配置可用**：放进 `mods` 重启服务器，默认自动出现“挖掘榜”。
-- **标题可定制**：管理员可用指令修改文字、颜色、粗体、下划线、斜体、删除线等。
+- **标题可定制**：支持经典 `&` 格式代码，也支持 JSON 文本组件；颜色、粗体、下划线、斜体、删除线等都可以设置。
 - **位置可切换**：`sidebar`（右侧）、`list`（Tab 列表）、`below_name`（玩家名字下方）。
-- **统计开关**：`/minedcount enable|disable` 控制是否继续计数。
-- **显示开关**：`/minedcount show|hide` 只控制计分板显示，计数继续。
-- **简单配置文件**：标题、是否允许占用 sidebar、位置、开关状态都会持久化。
+- **统计开关**：`/minedcounter enable|disable` 控制是否继续计数。
+- **显示开关**：`/minedcounter show|hide` 只控制计分板显示，计数继续。
+- **创造模式开关**：默认忽略创造模式破坏方块，使实时计数与原版统计、`/minedcounter init` 保持一致；可在配置或指令中打开。
+- **简单配置文件**：标题、sidebar 开关、位置、统计/显示/创造模式状态都会持久化。
 - **从原版统计初始化**：重置榜单并从玩家统计中汇总各类方块挖掘数；默认包含离线玩家。
+- **中英双语回显**：玩家收到的指令反馈跟随客户端语言（`zh_*` / 其他），控制台跟随服务器系统语言。
+- **旧数据迁移**：首次启动自动把旧版的 `minecount_total` 分数迁移到 `minedcounter_total`，不会清空榜单。
 - **纯服务端**：专用服务器只需装在服务端；原版客户端不用装也能看到计分板。
-- **轻量**：约 20 KB；每 20 tick 只做一次计分板检查，不遍历玩家。
+- **轻量**：约 26 KB；每 20 tick 只做一次计分板检查，不遍历玩家。
 - **软依赖 Fabric API**：Fabric API 缺失时自动停用并打印警告，不会导致服务器启动失败。
-- **MIT 开源**：约 700 行 Java，方便阅读和二次修改。
+- **MIT 开源**：约 1000 行 Java，方便阅读和二次修改。
 
 ## 安装
 
@@ -61,33 +64,39 @@ server/
 启动成功后，日志里会出现：
 
 ```text
-[mined_counter] active: objective=minecount_total, title='&e&n挖掘榜', position=sidebar, enabled=true, visible=true, sidebar=true
+[mined_counter] active: objective=minedcounter_total, title='&e&n挖掘榜', position=sidebar, enabled=true, visible=true, sidebar=true, countCreative=false
 ```
 
-### 从 1.1.0 升级
+### 从 1.1.0 或早期 1.2.0 升级
 
-直接用 1.2.0 的 jar 替换旧 jar 即可。计分项 `minecount_total` 和已有分数会保留；首次启动会生成 `config/mined_counter.json`，默认标题是 `&e&n挖掘榜`。如果你之前用指令改过计分板显示名，升级后会被配置文件中的标题覆盖，改回即可。
+直接用新 jar 替换旧 jar 即可：
+
+- 旧计分项 `minecount_total` 会在启动时自动复制到 `minedcounter_total`，然后删除旧计分项；
+- 旧指令 `/minedcount` 已改名为 `/minedcounter`，旧的命令名不再注册；
+- 计分项和已有分数保留；首次启动会生成 `config/mined_counter.json`，默认标题是 `&e&n挖掘榜`；
+- 如果你之前用指令改过计分板显示名，升级后会被配置文件中的标题覆盖，改回即可。
 
 ## 指令
 
-所有 `/minedcount` 指令都需要 **权限等级 2**（游戏内 OP / 管理员）。单人游戏需要开启作弊。
+所有 `/minedcounter` 指令都需要 **权限等级 2**（游戏内 OP / 管理员）。单人游戏需要开启作弊。
 
 | 指令 | 作用 |
 | --- | --- |
-| `/minedcount enable` | 恢复统计（计数继续，显示按 `visible` 状态恢复） |
-| `/minedcount disable` | 停止统计并隐藏计分板；已有分数保留 |
-| `/minedcount show` | 显示计分板；统计继续进行 |
-| `/minedcount hide` | 隐藏计分板；统计继续进行 |
-| `/minedcount title <标题>` | 修改标题文字与样式，例如 `&6&l&n挖掘榜` |
-| `/minedcount position <位置>` | 位置：`sidebar`、`list`、`below_name` |
-| `/minedcount init` | 重置榜单，并从在线 + 离线玩家统计重建 |
-| `/minedcount init online` | 只从在线玩家统计重建（不扫描离线文件，适合大服） |
-| `/minedcount reload` | 重新读取 `config/mined_counter.json` |
-| `/minedcount status` | 查看当前统计/显示/位置/标题状态 |
+| `/minedcounter enable` | 恢复统计（计数继续，显示按 `visible` 状态恢复） |
+| `/minedcounter disable` | 停止统计并隐藏计分板；已有分数保留 |
+| `/minedcounter show` | 显示计分板；统计继续进行 |
+| `/minedcounter hide` | 隐藏计分板；统计继续进行 |
+| `/minedcounter title <标题>` | 修改标题文字与样式，支持 `&` 代码或 JSON |
+| `/minedcounter position <位置>` | 位置：`sidebar`、`list`、`below_name` |
+| `/minedcounter creative on\|off` | 是否统计创造模式破坏方块（默认 `off`） |
+| `/minedcounter init` | 重置榜单，并从在线 + 离线玩家统计重建 |
+| `/minedcounter init online` | 只从在线玩家统计重建（不扫描离线文件，适合大服） |
+| `/minedcounter reload` | 重新读取 `config/mined_counter.json` |
+| `/minedcounter status` | 查看当前统计/显示/位置/创造模式/标题状态 |
 
-### 标题格式
+### 标题格式：`&` 代码
 
-标题使用经典的 `&` 格式代码，也接受 `§`：
+标题使用经典 `&` 格式代码，也接受 `§`：
 
 | 代码 | 效果 |
 | --- | --- |
@@ -103,19 +112,28 @@ server/
 示例：
 
 ```mcfunction
-/minedcount title &6&l&n挖掘榜
-/minedcount title &c&l红色&r&n下划线
+/minedcounter title &6&l&n挖掘榜
+/minedcounter title &c&l红色&r&n下划线
 ```
 
-标题最长 256 个字符，不能只包含格式代码。
+### 标题格式：JSON
 
-### 显示位置
+从 1.2.0 起，`title` 也接受标准 Minecraft JSON 文本组件：
 
 ```mcfunction
-/minedcount position sidebar     # 右侧边栏
-/minedcount position list        # Tab 列表
-/minedcount position below_name  # 玩家名字下方
+/minedcounter title {"text":"挖掘榜","color":"yellow","underlined":true,"bold":true}
 ```
+
+也支持**只写样式**的简写，样式会应用到当前标题文字上：
+
+```mcfunction
+/minedcounter title {color:"yellow";underlined:true}
+```
+
+- JSON 解析是宽松的：键名可以不加引号，分隔符可以用 `;`；最终会保存为规范 JSON。
+- 只写样式时，当前标题的纯文本会作为 `text` 写入配置，所以重启后仍然有效。
+- 标题 JSON 最长 1024 个字符；`&` 代码标题最长 256 个字符。
+- 标题不能为空，也不能只有样式而没有可见文字。
 
 ## 配置文件
 
@@ -127,27 +145,47 @@ server/
   "sidebar": true,
   "position": "sidebar",
   "enabled": true,
-  "visible": true
+  "visible": true,
+  "countCreative": false
 }
 ```
 
 | 字段 | 说明 |
 | --- | --- |
-| `title` | 标题原文，支持 `&` 格式代码 |
+| `title` | 标题原文，支持 `&` 格式代码或 JSON 文本组件 |
 | `sidebar` | 是否允许模组占用 sidebar。设为 `false` 时，`sidebar` 位置不会被挂载；`list` / `below_name` 不受影响 |
 | `position` | `sidebar`、`list` 或 `below_name` |
 | `enabled` | 是否继续统计方块 |
 | `visible` | 是否显示计分板 |
+| `countCreative` | 是否统计创造模式破坏方块；默认 `false` |
 
-`/minedcount enable/disable/show/hide/title/position` 会同步写回配置文件。手动编辑文件后执行 `/minedcount reload` 生效。
+`/minedcounter enable/disable/show/hide/title/position/creative` 会同步写回配置文件。手动编辑文件后执行 `/minedcounter reload` 生效。
 
-> `sidebar=false` 时，`/minedcount show` 和 `/minedcount position sidebar` 会拒绝执行并提示原因，避免配置与指令互相打架。
+> `sidebar=false` 时，`/minedcounter show` 和 `/minedcounter position sidebar` 会拒绝执行并提示原因，避免配置与指令互相打架。
+
+## 创造模式计数
+
+默认 `countCreative=false`，**创造模式破坏方块不会计入**。这是推荐设置，因为：
+
+- 原版统计 `Stats.BLOCK_MINED` 不记录创造模式破坏的方块；
+- 如果实时计数包含创造模式，`/minedcounter init` 从原版统计重建时就会“丢失”这部分，导致实时分数和重建结果不一致；
+- 对生存服/生电服来说，挖掘榜通常只应该反映生存获取。
+
+如果你确实希望创造模式也计数，可以执行：
+
+```mcfunction
+/minedcounter creative on
+```
+
+或在配置里设置 `"countCreative": true` 后 `/minedcounter reload`。
+
+**注意**：打开后，`/minedcounter init` 无法从原版统计恢复创造模式产生的分数，重建时这部分会被清掉。这是原版统计不记录创造模式导致的，不是模组可以无损补回的；如果以后需要“创造/生存分开统计”，需要额外维护第二个计分项或数据文件，会明显增加复杂度，本版本没有这样做。
 
 ## 初始化计分板
 
-`/minedcount init` 会：
+`/minedcounter init` 会：
 
-1. 删除并重建 `minecount_total`（等于重置所有分数）；
+1. 删除并重建 `minedcounter_total`（等于重置所有分数）；
 2. 对**在线玩家**读取实时的原版统计；
 3. 默认还会扫描 `world/players/stats/*.json`，读取**离线玩家**的统计；
 4. 按 `usercache.json` 把 UUID 映射回玩家名；
@@ -162,9 +200,20 @@ server/
 注意事项：
 
 - **只统计玩家破坏方块**；爆炸、活塞、自然消失不计入。
-- 默认会读取所有离线统计文件，可能产生一次性的磁盘 I/O 和短暂卡顿；大服建议在低峰期执行，或使用 `/minedcount init online`。
+- 默认会读取所有离线统计文件，可能产生一次性的磁盘 I/O 和短暂卡顿；大服建议在低峰期执行，或使用 `/minedcounter init online`。
 - 离线玩家必须能在 `usercache.json` 里找到名字，否则会被跳过。
 - 该指令不会自动运行，只在你手动执行时发生。
+- 如果 `countCreative=true`，创造模式产生的实时分数不会出现在重建结果中，原因见上一节。
+
+## 本地化 / Localisation
+
+指令回显支持中文和英文，不需要安装资源包：
+
+- 玩家执行指令时，根据玩家的客户端语言决定：`zh_*` 使用中文，其他语言使用英文；
+- 控制台、命令方块、RCON 没有客户端语言，使用服务器操作系统的默认语言；
+- 指令名、子指令名和错误信息中的参数值保持英文（例如 `sidebar`、`list`），便于复制和排错。
+
+如果你希望增加更多语言，可以在 `Messages.java` 中增加语言分支；当前只内置中文和英文，避免引入客户端资源包依赖。
 
 ## 兼容性
 
@@ -178,15 +227,16 @@ server/
 
 - 会占用配置的显示位。与其他会修改同一显示位的计分板模组同时使用时，以最后加载/刷新者为准。
 - 未测试 26.2 及更高版本；`fabric.mod.json` 已限制为 `~26.1.2`。
-- 计分项 ID 固定为 `minecount_total`，不随标题变化。
+- 计分项 ID 固定为 `minedcounter_total`，不随标题变化。
 
 ## 工作原理
 
-1. 通过 Fabric API 的 `PlayerBlockBreakEvents.AFTER` 监听方块破坏；统计开启时直接给 `minecount_total` +1。
+1. 通过 Fabric API 的 `PlayerBlockBreakEvents.AFTER` 监听方块破坏；统计开启且（默认）非创造模式时，直接给 `minedcounter_total` +1。
 2. 服务端启动时创建计分项，读取配置并挂到目标显示位；之后每 20 tick 检查一次显示位，不遍历玩家。
-3. `/minedcount` 指令修改配置并立即调用同一套应用逻辑。
-4. `/minedcount init` 重建计分项，从在线统计和 `world/players/stats` 汇总数据。
-5. 数据完全存放在原版计分板中，没有额外的存档文件；配置文件只保存显示设置。
+3. 启动时把旧 `minecount_total` 的分数复制到新计分项，并清理 1.0.0 的 `minecount_pool`。
+4. `/minedcounter` 指令修改配置并立即调用同一套应用逻辑；标题支持 `&` 代码或 JSON 组件。
+5. `/minedcounter init` 重建计分项，从在线统计和 `world/players/stats` 汇总数据。
+6. 数据完全存放在原版计分板中，没有额外的存档文件；配置文件只保存显示设置。
 
 ## 从源码构建
 
@@ -213,13 +263,16 @@ server/
 ```text
 mined-counter/
 ├── src/main/java/minedcounter/
-│   ├── MinedCounter.java       # 入口，检查 Fabric API 是否可用
-│   ├── CounterHook.java        # 事件、计分板、配置应用、统计导入
-│   ├── CounterConfig.java      # 配置文件读写与校验
-│   ├── MinedCountCommand.java  # /minedcount 指令树
-│   └── TitleParser.java        # & 格式代码解析
+│   ├── MinedCounter.java        # 入口，检查 Fabric API 是否可用
+│   ├── CounterHook.java         # 事件、计分板、配置应用、统计导入、旧数据迁移
+│   ├── CounterConfig.java       # 配置文件读写与校验
+│   ├── MinedCounterCommand.java # /minedcounter 指令树
+│   ├── TitleParser.java         # & 代码与 JSON 标题解析
+│   └── Messages.java            # 中英双语指令回显
 ├── src/main/resources/
 │   └── fabric.mod.json
+├── examples/
+│   └── mined_counter.json       # 配置示例
 ├── build.ps1
 ├── dist/
 │   ├── mined-counter-1.1.0.jar
@@ -241,14 +294,14 @@ mined-counter/
 
 - 只统计总量，不按方块种类细分。
 - 会强制占用所选显示位；与其他同位置计分板模组冲突。
-- 标题只支持 `&` 格式代码，不支持 JSON 文本组件、点击事件或悬浮事件。
+- 标题 JSON 使用标准文本组件解析，但指令回显只有中文/英文两种语言。
 - 指令权限固定为等级 2，没有更细的权限节点。
 - `init` 读取离线统计需要 `usercache.json` 中存在对应玩家名。
 - 仅面向 26.1.2，跨版本需要重新编译并调整 `fabric.mod.json`。
 
 ## 关于假人与大小写（不是模组 bug）
 
-有服务器反馈：真实玩家 `Galaxy_1118` 和假人 `galaxy_1118` 同时出现在榜单，但执行 `/scoreboard players reset galaxy_1118 minecount_total` 时，被重置的是真实玩家 `Galaxy_1118`。
+有服务器反馈：真实玩家 `Galaxy_1118` 和假人 `galaxy_1118` 同时出现在榜单，但执行 `/scoreboard players reset galaxy_1118 minedcounter_total` 时，被重置的是真实玩家 `Galaxy_1118`。
 
 这是原版计分板与指令解析的行为，不是本模组造成的：
 
@@ -294,21 +347,24 @@ mined-counter/
 
 # Mined Counter
 
-A lightweight **server-side Fabric mod** that counts how many blocks each player has mined and shows a live leaderboard on the scoreboard. Admins can restyle the title, move the display, toggle counting/visibility, and rebuild the board from vanilla statistics with `/minedcount`.
+A lightweight **server-side Fabric mod** that counts how many blocks each player has mined and shows a live leaderboard on the scoreboard. Admins can restyle the title (including JSON components), move the display, toggle counting/visibility, and rebuild the board from vanilla statistics with `/minedcounter`.
 
 Target: **Minecraft 26.1.2** + **Fabric Loader 0.19.2**, Java 21+.
 
 ## Features
 
 - Instant counting on block break (no polling loop).
-- Creates `minecount_total` and attaches it to the configured display slot automatically.
-- Title supports classic `&` formatting: colours, bold, underline, italic, strikethrough, obfuscated, reset.
+- Creates `minedcounter_total` and attaches it to the configured display slot automatically.
+- Titles support classic `&` codes and standard JSON text components.
 - Display positions: `sidebar`, `list`, `below_name`.
-- `/minedcount enable|disable` controls counting; `/minedcount show|hide` controls only visibility.
+- `/minedcounter enable|disable` controls counting; `/minedcounter show|hide` controls only visibility.
+- Creative-mode block breaks are ignored by default so live scores match vanilla statistics; `/minedcounter creative on|off` changes this.
 - Simple `config/mined_counter.json` persisted settings.
-- `/minedcount init` rebuilds the board from vanilla stats, including offline players by default.
+- `/minedcounter init` rebuilds the board from vanilla stats, including offline players by default.
+- Command feedback is available in Chinese and English; player feedback follows the client language.
+- Automatically migrates the old `minecount_total` objective to `minedcounter_total`.
 - Server-side only: vanilla clients see the scoreboard without installing anything.
-- ~20 KB; checks the display slot once every 20 ticks, never iterates players.
+- ~26 KB; checks the display slot once every 20 ticks, never iterates players.
 - Fabric API is a soft dependency; without it the mod stays inactive instead of crashing the server.
 - MIT licensed.
 
@@ -319,7 +375,7 @@ Target: **Minecraft 26.1.2** + **Fabric Loader 0.19.2**, Java 21+.
 3. Put `mined-counter-1.2.0.jar` into `mods/`.
 4. Restart the server.
 
-Upgrading from 1.1.0: replace the jar. The objective and scores are kept; a config file is generated on first start.
+Upgrading from 1.1.0: replace the jar. The old objective is migrated automatically; a config file is generated on first start. The command was renamed from `/minedcount` to `/minedcounter`.
 
 ## Commands
 
@@ -327,16 +383,39 @@ Requires permission level 2 (OP / gamemaster). In singleplayer, cheats must be e
 
 | Command | Effect |
 | --- | --- |
-| `/minedcount enable` | Resume counting |
-| `/minedcount disable` | Stop counting and hide the board; scores are kept |
-| `/minedcount show` | Show the board; counting continues |
-| `/minedcount hide` | Hide the board; counting continues |
-| `/minedcount title <title>` | Set title text/styles, e.g. `&6&l&nMined` |
-| `/minedcount position <sidebar\|list\|below_name>` | Move the display |
-| `/minedcount init` | Reset and rebuild from online + offline stats |
-| `/minedcount init online` | Rebuild from online players only |
-| `/minedcount reload` | Reload `config/mined_counter.json` |
-| `/minedcount status` | Show current state |
+| `/minedcounter enable` | Resume counting |
+| `/minedcounter disable` | Stop counting and hide the board; scores are kept |
+| `/minedcounter show` | Show the board; counting continues |
+| `/minedcounter hide` | Hide the board; counting continues |
+| `/minedcounter title <title>` | Set title text/styles, `&` codes or JSON |
+| `/minedcounter position <sidebar\|list\|below_name>` | Move the display |
+| `/minedcounter creative on\|off` | Count creative block breaks (default off) |
+| `/minedcounter init` | Reset and rebuild from online + offline stats |
+| `/minedcounter init online` | Rebuild from online players only |
+| `/minedcounter reload` | Reload `config/mined_counter.json` |
+| `/minedcounter status` | Show current state |
+
+## Titles
+
+Legacy codes:
+
+```mcfunction
+/minedcounter title &6&l&nMined
+```
+
+Standard JSON component:
+
+```mcfunction
+/minedcounter title {"text":"Mined","color":"yellow","underlined":true,"bold":true}
+```
+
+Style-only JSON is applied to the current title text:
+
+```mcfunction
+/minedcounter title {color:"yellow";underlined:true}
+```
+
+The JSON parser accepts unquoted keys and semicolon separators, then stores canonical JSON. JSON titles are limited to 1024 characters; legacy titles to 256.
 
 ## Config
 
@@ -348,7 +427,8 @@ Requires permission level 2 (OP / gamemaster). In singleplayer, cheats must be e
   "sidebar": true,
   "position": "sidebar",
   "enabled": true,
-  "visible": true
+  "visible": true,
+  "countCreative": false
 }
 ```
 
@@ -356,16 +436,27 @@ Requires permission level 2 (OP / gamemaster). In singleplayer, cheats must be e
 - `position`: `sidebar`, `list`, or `below_name`.
 - `enabled`: counting on/off.
 - `visible`: display on/off.
+- `countCreative`: count creative block breaks (default false).
 
-Commands write these values back. Manual edits take effect after `/minedcount reload`.
+Commands write these values back. Manual edits take effect after `/minedcounter reload`.
+
+## Creative mode
+
+The default `countCreative=false` ignores creative block breaks. This keeps live scores consistent with vanilla `Stats.BLOCK_MINED` (which does not record creative breaks), so `/minedcounter init` does not silently drop creative-only points.
+
+If enabled, creative breaks are counted live, but `/minedcounter init` cannot restore them from vanilla stats; they will be cleared on rebuild.
 
 ## Init semantics
 
-`/minedcount init` removes and recreates `minecount_total`, reads live online stats, then scans `world/players/stats/*.json` for offline players and maps UUIDs through `usercache.json`. Block mining stats are summed per player.
+`/minedcounter init` removes and recreates `minedcounter_total`, reads live online stats, then scans `world/players/stats/*.json` for offline players and maps UUIDs through `usercache.json`. Block mining stats are summed per player.
 
 - Only player block breaks are counted.
-- Reading all offline stats is a one-time I/O cost; on very large servers use `/minedcount init online` and run at low traffic.
+- Reading all offline stats is a one-time I/O cost; on very large servers use `/minedcounter init online` and run at low traffic.
 - Offline players missing from `usercache.json` are skipped.
+
+## Localisation
+
+Command feedback is Chinese for `zh_*` clients and English otherwise. Console/RCON uses the server operating-system language. Command and argument names stay in English.
 
 ## Compatibility
 

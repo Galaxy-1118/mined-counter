@@ -3,7 +3,7 @@
   "id": "mined_counter",
   "version": "1.2.0",
   "name": "Mined Counter",
-  "description": "统计每位玩家挖掘方块的总次数，并在右侧计分板实时显示挖掘榜。管理员可用 /minedcount 修改标题和显示位置、开关统计与显示、从原版统计初始化。服务端模组。Counts mined blocks per player with a live leaderboard; admins can restyle, reposition, toggle and re-initialise it with /minedcount. Server-side.",
+  "description": "统计每位玩家挖掘方块的总次数，并在右侧计分板实时显示挖掘榜。管理员可用 /minedcounter 修改标题和显示位置、开关统计与显示、从原版统计初始化。服务端模组。Counts mined blocks per player with a live leaderboard; admins can restyle, reposition, toggle and re-initialise it with /minedcounter. Server-side.",
   "authors": [
     "Galaxy-1118"
   ],

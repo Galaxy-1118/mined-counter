@@ -24,6 +24,7 @@ public final class CounterConfig {
     public static final String DEFAULT_TITLE = "&e&n挖掘榜";
     public static final String DEFAULT_POSITION = "sidebar";
     public static final int MAX_TITLE_LENGTH = 256;
+    public static final int MAX_JSON_TITLE_LENGTH = 1024;
 
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
@@ -38,6 +39,7 @@ public final class CounterConfig {
     public String position = DEFAULT_POSITION;
     public boolean enabled = true;
     public boolean visible = true;
+    public boolean countCreative = false;
 
     public static CounterConfig load() {
         try {
@@ -72,6 +74,10 @@ public final class CounterConfig {
 
     public Component titleComponent() {
         return TitleParser.parse(title);
+    }
+
+    public String plainTitle() {
+        return TitleParser.plainText(title);
     }
 
     public DisplaySlot displaySlot() {
@@ -109,7 +115,7 @@ public final class CounterConfig {
             title = DEFAULT_TITLE;
         }
         title = title.replace('\n', ' ').replace('\r', ' ');
-        if (title.length() > MAX_TITLE_LENGTH) {
+        if (!TitleParser.looksLikeJson(title) && title.length() > MAX_TITLE_LENGTH) {
             title = title.substring(0, MAX_TITLE_LENGTH);
         }
         String normalizedPosition = normalizePosition(position);

@@ -16,6 +16,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.PlayerScoreEntry;
+import net.minecraft.world.scores.ReadOnlyScoreInfo;
 import net.minecraft.world.scores.ScoreAccess;
 import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
@@ -36,13 +38,14 @@ import java.util.stream.Stream;
 /**
  * Server-side counter and scoreboard lifecycle.
  *
- * <p>The mod owns one dummy objective, {@code minecount_total}. A block break
- * increments the breaking player's score directly, so there is no per-tick
- * player iteration. A light task runs once per second to keep the configured
- * display slot attached after another mod or an admin changes it.</p>
+ * <p>The mod owns one dummy objective, {@code minedcounter_total}. A block
+ * break increments the breaking player's score directly, so there is no
+ * per-tick player iteration. A light task runs once per second to keep the
+ * configured display slot attached after another mod or an admin changes it.</p>
  */
 public final class CounterHook {
-    private static final String TOTAL_OBJECTIVE = "minecount_total";
+    private static final String TOTAL_OBJECTIVE = "minedcounter_total";
+    private static final String LEGACY_TOTAL_OBJECTIVE = "minecount_total";
     private static final String LEGACY_POOL_OBJECTIVE = "minecount_pool";
     private static final int DISPLAY_CHECK_TICKS = 20;
     private static final DisplaySlot[] MANAGED_SLOTS = {
@@ -70,7 +73,11 @@ public final class CounterHook {
             if (!config.enabled || level.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
                 return;
             }
+            if (serverPlayer.isCreative() && !config.countCreative) {
+                return;
+            }
             Scoreboard scoreboard = level.getScoreboard();
+            migrateLegacyObjectives(scoreboard);
             Objective objective = scoreboard.getObjective(TOTAL_OBJECTIVE);
             if (objective == null) {
                 objective = createObjective(scoreboard);
@@ -91,8 +98,9 @@ public final class CounterHook {
             appliedTitle = null;
             apply(server);
             MinedCounter.LOGGER.info(
-                    "[mined_counter] active: objective={}, title='{}', position={}, enabled={}, visible={}, sidebar={}",
-                    TOTAL_OBJECTIVE, config.title, config.position, config.enabled, config.visible, config.sidebar);
+                    "[mined_counter] active: objective={}, title='{}', position={}, enabled={}, visible={}, sidebar={}, countCreative={}",
+                    TOTAL_OBJECTIVE, config.title, config.position, config.enabled, config.visible,
+                    config.sidebar, config.countCreative);
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
@@ -138,6 +146,11 @@ public final class CounterHook {
         apply(server);
     }
 
+    static void setCountCreative(MinecraftServer server, boolean countCreative) {
+        config.countCreative = countCreative;
+        config.save();
+    }
+
     static CounterConfig reload(MinecraftServer server) {
         config = CounterConfig.load();
         appliedTitle = null;
@@ -157,6 +170,10 @@ public final class CounterHook {
         Objective previous = scoreboard.getObjective(TOTAL_OBJECTIVE);
         if (previous != null) {
             scoreboard.removeObjective(previous);
+        }
+        Objective legacyTotal = scoreboard.getObjective(LEGACY_TOTAL_OBJECTIVE);
+        if (legacyTotal != null) {
+            scoreboard.removeObjective(legacyTotal);
         }
 
         appliedTitle = null;
@@ -274,6 +291,7 @@ public final class CounterHook {
 
     private static void apply(MinecraftServer server) {
         Scoreboard scoreboard = server.getScoreboard();
+        migrateLegacyObjectives(scoreboard);
         Objective objective = scoreboard.getObjective(TOTAL_OBJECTIVE);
 
         // Do not create a fresh objective for a disabled, hidden counter; the
@@ -290,12 +308,46 @@ public final class CounterHook {
             appliedTitle = config.title;
         }
 
-        Objective legacy = scoreboard.getObjective(LEGACY_POOL_OBJECTIVE);
-        if (legacy != null) {
-            scoreboard.removeObjective(legacy);
+        updateDisplay(scoreboard, objective);
+    }
+
+    /**
+     * Copies scores from the 1.1.0/early-1.2.0 objective name and removes the
+     * old 1.0.0 pool objective. The new objective keeps all existing entries so
+     * the rename does not reset a server's leaderboard.
+     */
+    private static void migrateLegacyObjectives(Scoreboard scoreboard) {
+        Objective legacyTotal = scoreboard.getObjective(LEGACY_TOTAL_OBJECTIVE);
+        if (legacyTotal != null) {
+            Objective current = scoreboard.getObjective(TOTAL_OBJECTIVE);
+            if (current == null) {
+                current = scoreboard.addObjective(
+                        TOTAL_OBJECTIVE,
+                        ObjectiveCriteria.DUMMY,
+                        config.titleComponent(),
+                        ObjectiveCriteria.RenderType.INTEGER,
+                        false,
+                        null);
+                if (current != null) {
+                    appliedTitle = config.title;
+                }
+            }
+            if (current != null) {
+                for (PlayerScoreEntry entry : scoreboard.listPlayerScores(legacyTotal)) {
+                    ScoreHolder holder = ScoreHolder.forNameOnly(entry.owner());
+                    ReadOnlyScoreInfo existing = scoreboard.getPlayerScoreInfo(holder, current);
+                    if (existing == null) {
+                        scoreboard.getOrCreatePlayerScore(holder, current).set(entry.value());
+                    }
+                }
+            }
+            scoreboard.removeObjective(legacyTotal);
         }
 
-        updateDisplay(scoreboard, objective);
+        Objective legacyPool = scoreboard.getObjective(LEGACY_POOL_OBJECTIVE);
+        if (legacyPool != null) {
+            scoreboard.removeObjective(legacyPool);
+        }
     }
 
     private static Objective createObjective(Scoreboard scoreboard) {

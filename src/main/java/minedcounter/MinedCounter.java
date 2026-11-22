@@ -29,9 +29,9 @@ public class MinedCounter implements ModInitializer {
         CounterHook.initialize();
 
         if (loader.isModLoaded("fabric-api") || loader.isModLoaded("fabric-command-api-v2")) {
-            MinedCountCommand.register();
+            MinedCounterCommand.register();
         } else {
-            LOGGER.warn("[mined_counter] fabric-command-api-v2 is missing - /minedcount commands are disabled.");
+            LOGGER.warn("[mined_counter] fabric-command-api-v2 is missing - /minedcounter commands are disabled.");
         }
 
         LOGGER.info("[mined_counter] loaded; config file: config/mined_counter.json");

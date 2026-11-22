@@ -3,20 +3,25 @@
 ## 1.2.0 — 2026-11-22
 
 ### 新增 / Added
-- `/minedcount` 管理指令：`enable`、`disable`、`show`、`hide`、`title`、`position`、`init`、`init online`、`reload`、`status`。
-- 标题样式指令，支持 `&` 颜色、粗体、下划线、斜体、删除线、混淆和重置代码。
+- `/minedcounter` 管理指令：`enable`、`disable`、`show`、`hide`、`title`、`position`、`creative`、`init`、`init online`、`reload`、`status`。
+- 标题支持标准 JSON 文本组件和“只写样式”的简写，例如 `{"text":"挖掘榜","color":"yellow","underlined":true}`、`{color:"yellow";underlined:true}`。
 - 显示位置切换：`sidebar`、`list`、`below_name`。
-- `config/mined_counter.json` 配置文件：标题、sidebar 开关、位置、统计/显示状态。
-- `/minedcount init`：重置计分板并从原版统计重建；默认读取在线玩家和 `world/players/stats` 中的离线玩家，`init online` 只处理在线玩家。
+- `config/mined_counter.json` 配置文件：标题、sidebar 开关、位置、统计/显示状态、创造模式计数。
+- `/minedcounter init`：重置计分板并从原版统计重建；默认读取在线玩家和 `world/players/stats` 中的离线玩家，`init online` 只处理在线玩家。
 - 初始化时通过 `usercache.json` 把离线玩家 UUID 映射回名字。
+- 指令回显中英双语：玩家跟随客户端语言，控制台跟随服务器系统语言。
+- `/minedcounter creative on|off`：控制是否统计创造模式破坏方块，默认关闭。
 
 ### 变更 / Changed
+- 指令名从 `/minedcount` 统一为 `/minedcounter`。
+- 计分项名从 `minecount_total` 统一为 `minedcounter_total`；启动时自动复制旧分数并删除旧计分项，不会清空榜单。
+- 默认忽略创造模式破坏方块，使实时计数与原版 `Stats.BLOCK_MINED`、`/minedcounter init` 保持一致。
 - 计分板显示逻辑改为根据配置管理显示位，并区分“统计开关”和“显示开关”。
 - 每 20 tick 的检查只维护目标显示位，不遍历玩家。
-- 升级到 1.2.0 后首次启动会生成配置文件；已有的 `minecount_total` 分数保留。
 
 ### 文档 / Docs
-- 增加指令、配置、初始化、假人与大小写问题的说明。
+- 增加 JSON 标题、创造模式方案、双语回显、旧数据迁移、假人与大小写问题的说明。
+- 增加 `examples/mined_counter.json` 配置示例。
 
 ## 1.1.0 — 2026-10-11
 
