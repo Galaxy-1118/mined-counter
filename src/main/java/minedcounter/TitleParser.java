@@ -12,6 +12,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * Parses the title argument. Two formats are accepted:
  *
@@ -32,6 +35,23 @@ final class TitleParser {
             .disableHtmlEscaping()
             .create();
     private static final String DEFAULT_TEXT = "挖掘榜";
+    private static final Set<ChatFormatting> COLORS = EnumSet.of(
+            ChatFormatting.BLACK,
+            ChatFormatting.DARK_BLUE,
+            ChatFormatting.DARK_GREEN,
+            ChatFormatting.DARK_AQUA,
+            ChatFormatting.DARK_RED,
+            ChatFormatting.DARK_PURPLE,
+            ChatFormatting.GOLD,
+            ChatFormatting.GRAY,
+            ChatFormatting.DARK_GRAY,
+            ChatFormatting.BLUE,
+            ChatFormatting.GREEN,
+            ChatFormatting.AQUA,
+            ChatFormatting.RED,
+            ChatFormatting.LIGHT_PURPLE,
+            ChatFormatting.YELLOW,
+            ChatFormatting.WHITE);
 
     private TitleParser() {
     }
@@ -235,7 +255,7 @@ final class TitleParser {
                 reset();
                 return;
             }
-            if (formatting.isColor()) {
+            if (COLORS.contains(formatting)) {
                 color = formatting;
                 return;
             }

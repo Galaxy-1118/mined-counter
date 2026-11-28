@@ -1,13 +1,14 @@
 # Mined Counter / 挖掘榜
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2-62B47A?style=flat-square)](https://minecraft.net)
+[![Minecraft](https://img.shields.io/badge/Minecraft-26.1--26.3-62B47A?style=flat-square)](https://minecraft.net)
 [![Fabric Loader](https://img.shields.io/badge/Fabric_Loader-0.19.2%2B-1976D2?style=flat-square)](https://fabricmc.net)
+[![Java](https://img.shields.io/badge/Java-25%2B-orange?style=flat-square)](https://adoptium.net)
 [![Environment](https://img.shields.io/badge/Environment-Server-6E6E6E?style=flat-square)](#安装)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 一个轻量的 **Fabric 服务端模组**：统计每位玩家挖掘方块的总次数，并在计分板上实时显示“挖掘榜”。管理员可以用游戏内指令修改标题样式、切换显示位置、开关统计与显示，也可以从原版统计重建榜单。
 
-目标版本：**Minecraft 26.1.2** + **Fabric Loader 0.19.2**，Java 21+。
+目标版本：**Minecraft 26.1 – 26.3**，Fabric Loader **0.19.2+ / 0.20.1+**，Java **25+**。每个 Minecraft 版本有独立 jar，详见下方版本矩阵。
 
 > 当前开发版本 **1.2.0**。1.1.0 的下载与历史仍在 [Releases](https://github.com/Galaxy-1118/mined-counter/releases)。
 
@@ -46,10 +47,38 @@ scoreboard objectives add stone_mined minecraft.mined:minecraft.stone
 
 ## 安装
 
-1. 安装 **Minecraft 26.1.2** 和 **Fabric Loader 0.19.2+**（[Fabric 安装器](https://fabricmc.net/use/)）。
-2. 安装 [Fabric API](https://modrinth.com/mod/fabric-api)（选 `26.1.2` 版本）。
-3. 把 `mined-counter-1.2.0.jar` 放进服务器的 `mods` 文件夹。
-4. 重启服务器。
+1. 确认你的 Minecraft 是 **26.1 – 26.3** 之间的正式版，并安装对应的 Fabric Loader。
+2. 安装 [Fabric API](https://modrinth.com/mod/fabric-api)（版本见下表）。
+3. 把**对应 Minecraft 版本**的 jar 放进服务器的 `mods` 文件夹。
+4. 重启服务器，并确认 Java 是 25 或更高。
+
+### 26.x 版本矩阵
+
+| Minecraft | Fabric Loader | Fabric API | jar |
+| --- | --- | --- | --- |
+| 26.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.jar` |
+| 26.1.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.1.jar` |
+| 26.1.2 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.2.jar` |
+| 26.2 | 0.20.1+ | 0.161.0+26.2 | `mined-counter-1.2.0+26.2.jar` |
+| 26.3 | 0.20.1+ | 0.167.0+26.3 | `mined-counter-1.2.0+26.3.jar` |
+
+26.1 / 26.1.1 / 26.1.2 使用同一份代码和 Fabric API 构建；26.1 的 jar 覆盖整个 26.1.x，26.1.1 / 26.1.2 的 jar 从对应补丁版本起兼容。建议按你的精确版本选择对应文件。完整文件清单和 SHA-256 见 [docs/versions.md](docs/versions.md)。
+
+### 文件命名
+
+文件名采用主流 Fabric 模组的约定：
+
+```text
+mined-counter-<模组版本>+<Minecraft版本>.jar
+mined-counter-1.2.0+26.1.2.jar
+```
+
+- `mined-counter`：模组名，使用小写和连字符；
+- `1.2.0`：模组版本；
+- `+26.1.2`：SemVer build metadata，表示目标 Minecraft 版本；
+- 本项目只有 Fabric 一个加载器，所以文件名不额外加 `fabric`。如果以后同时支持 NeoForge，会改为 `mined-counter-fabric-...` / `mined-counter-neoforge-...`。
+
+Fabric API、Sodium、Lithium 等主流模组也使用类似格式，例如 `fabric-api-0.167.0+26.3.jar`、`lithium-fabric-0.26.4+mc26.3.jar`。不建议使用 `mined_counter-fabric-'26.1.2'-v-1.2.0.jar` 这类带引号、下划线和 `v-` 前缀的写法。
 
 目录结构示例：
 
@@ -58,8 +87,8 @@ server/
 ├── config/
 │   └── mined_counter.json      # 首次启动自动生成
 └── mods/
-    ├── fabric-api-0.152.1+26.1.2.jar
-    └── mined-counter-1.2.0.jar
+    ├── fabric-api-0.155.3+26.1.2.jar
+    └── mined-counter-1.2.0+26.1.2.jar
 ```
 
 启动成功后，日志里会出现：
@@ -250,14 +279,14 @@ ServerPlayer.hasCorrectToolForDrops(state) == true
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 26.1.2 |
-| Fabric Loader | 0.19.2+ |
-| Fabric API | 26.1.2 对应版本（开发环境：0.149.0+26.1.2） |
-| Java | 21+ |
+| Minecraft | 26.1 / 26.1.1 / 26.1.2 / 26.2 / 26.3，每个版本使用对应 jar |
+| Fabric Loader | 26.1.x：0.19.2+；26.2 / 26.3：0.20.1+ |
+| Fabric API | 26.1.x：0.155.3+26.1.2；26.2：0.161.0+26.2；26.3：0.167.0+26.3 |
+| Java | 25+ |
 | 环境 | 服务端 / 单人游戏 |
 
 - 会占用配置的显示位。与其他会修改同一显示位的计分板模组同时使用时，以最后加载/刷新者为准。
-- 未测试 26.2 及更高版本；`fabric.mod.json` 已限制为 `~26.1.2`。
+- 26.1–26.3 源码均已编译验证；发布前建议在对应版本服务端各做一次冒烟测试，尤其是 26.2/26.3。
 - 计分项 ID 固定为 `minedcounter_total`，不随标题变化。
 
 ## 工作原理
@@ -271,23 +300,46 @@ ServerPlayer.hasCorrectToolForDrops(state) == true
 
 ## 从源码构建
 
-本项目**没有使用 Gradle/Loom**。26.1.2 的正式版 jar 直接包含 Mojang 官方类名（例如 `net/minecraft/server/level/ServerPlayer`），因此可以用 `javac` 直接编译。
+本项目**没有使用 Gradle/Loom**。26.x 的正式版 jar 直接包含 Mojang 官方类名（例如 `net/minecraft/server/level/ServerPlayer`），因此可以用 `javac` 直接编译。
 
 ### 前置条件
 
-- JDK 21 或更高（脚本默认读取 `JAVA_HOME`，否则使用 `D:\JDK25`）
-- 一个已安装 Fabric Loader 和 Fabric API 的 `26.1.2-Fabric 0.19.2` 版本目录
-- Fabric API 的 bundle jar 放在该版本的 `mods` 文件夹里
+- JDK 25（脚本默认读取 `JAVA_HOME`，否则使用 `D:\JDK25`）
+- Java 25 运行时（Minecraft 26.x / Fabric API 要求）
+- 每个目标版本的游戏 jar、Fabric Loader、Fabric API（见下方目录布局）
 
-### 构建
+### 多版本构建
+
+```powershell
+.\build-versions.ps1
+```
+
+脚本读取 `versions.json`，默认从 `D:\Deepseek Harness\mc-versions` 取各版本依赖，输出：
+
+```text
+dist/mined-counter-1.2.0+26.1.jar
+dist/mined-counter-1.2.0+26.1.1.jar
+dist/mined-counter-1.2.0+26.1.2.jar
+dist/mined-counter-1.2.0+26.2.jar
+dist/mined-counter-1.2.0+26.3.jar
+```
+
+每个版本目录需要：
+
+```text
+mc-versions/<minecraft>/
+├── <minecraft>.jar        # Mojang 映射的客户端 jar
+├── fabric-loader.jar
+└── fabric-api.jar         # Fabric API bundle
+```
+
+`build.ps1` 仍然保留，用于只构建本地 26.1.2 单版本开发包：
 
 ```powershell
 .\build.ps1 -GameDir "E:\MCPCL\PCL 2.12.7.3\.minecraft\versions\26.1.2-Fabric 0.19.2" -JdkHome "D:\JDK25"
 ```
 
 输出：`dist/mined-counter-1.2.0.jar`
-
-脚本会从 Fabric API bundle 中解出嵌套模块，并自动在 `.minecraft\libraries` 里查找 `slf4j`、`guava`、`brigadier`、`jspecify` 等编译期依赖。
 
 ### 目录结构
 
@@ -304,22 +356,27 @@ mined-counter/
 │   └── fabric.mod.json
 ├── examples/
 │   └── mined_counter.json       # 配置示例
-├── build.ps1
+├── build.ps1                    # 单版本 26.1.2 开发构建
+├── build-versions.ps1           # 26.x 多版本构建
+├── versions.json                # 版本 / Loader / API 矩阵
+├── docs/
+│   └── versions.md              # 26.x 文件清单与 SHA-256
 ├── dist/
 │   ├── mined-counter-1.1.0.jar
-│   └── mined-counter-1.2.0.jar
+│   ├── mined-counter-1.2.0.jar          # 旧版单版本包
+│   └── mined-counter-1.2.0+26.*.jar     # 多版本包
 ├── CHANGELOG.md
 └── LICENSE
 ```
 
 ## 发布新版本
 
-1. 修改 `src/main/resources/fabric.mod.json` 和 `build.ps1` 里的版本号。
-2. 重新运行 `build.ps1`。
+1. 修改 `src/main/resources/fabric.mod.json`、`build.ps1` 和 `versions.json` 里的版本/矩阵信息。
+2. 运行 `.\build-versions.ps1` 生成全部 26.x jar。
 3. 在 `.github/release-notes/` 新建与 tag 同名的说明文件。
 4. 提交并推送 `main`。
 5. 打 tag 并推送：`git tag v1.2.0`、`git push origin v1.2.0`。
-6. GitHub Actions 会自动创建 Release，并只上传与 tag 匹配的 `dist/mined-counter-<version>.jar`。
+6. GitHub Actions 会自动创建 Release，并上传与 tag 匹配的 `dist/mined-counter-<version>+*.jar`。
 
 ## 已知限制
 
@@ -329,7 +386,7 @@ mined-counter/
 - 标题 JSON 使用标准文本组件解析，但指令回显只有中文/英文两种语言。
 - 指令权限固定为等级 2，没有更细的权限节点。
 - `init` 读取离线统计需要 `usercache.json` 中存在对应玩家名。
-- 仅面向 26.1.2，跨版本需要重新编译并调整 `fabric.mod.json`。
+- 面向 Minecraft 26.1–26.3；每个版本使用对应 jar，跨大版本需要重新编译。
 
 ## 关于假人与大小写（不是模组 bug）
 
@@ -381,7 +438,7 @@ mined-counter/
 
 A lightweight **server-side Fabric mod** that counts how many blocks each player has mined and shows a live leaderboard on the scoreboard. Admins can restyle the title (including JSON components), move the display, toggle counting/visibility, and rebuild the board from vanilla statistics with `/minedcounter`.
 
-Target: **Minecraft 26.1.2** + **Fabric Loader 0.19.2**, Java 21+.
+Target: **Minecraft 26.1 – 26.3**, Fabric Loader **0.19.2+ / 0.20.1+**, Java **25+**. Each Minecraft version has its own jar; see the matrix below.
 
 ## Features
 
@@ -403,10 +460,20 @@ Target: **Minecraft 26.1.2** + **Fabric Loader 0.19.2**, Java 21+.
 
 ## Install
 
-1. Minecraft 26.1.2 + Fabric Loader 0.19.2+.
-2. [Fabric API](https://modrinth.com/mod/fabric-api) for 26.1.2.
-3. Put `mined-counter-1.2.0.jar` into `mods/`.
-4. Restart the server.
+1. Use a release version of Minecraft **26.1 – 26.3** with the matching Fabric Loader.
+2. Install [Fabric API](https://modrinth.com/mod/fabric-api) for that Minecraft version.
+3. Put the matching jar into `mods/`.
+4. Restart the server with Java 25+.
+
+| Minecraft | Fabric Loader | Fabric API | jar |
+| --- | --- | --- | --- |
+| 26.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.jar` |
+| 26.1.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.1.jar` |
+| 26.1.2 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.2.jar` |
+| 26.2 | 0.20.1+ | 0.161.0+26.2 | `mined-counter-1.2.0+26.2.jar` |
+| 26.3 | 0.20.1+ | 0.167.0+26.3 | `mined-counter-1.2.0+26.3.jar` |
+
+File naming follows the common Fabric convention `mined-counter-<modversion>+<minecraft>.jar`, the same pattern used by Fabric API, Sodium and Lithium. The `+26.1.2` suffix is SemVer build metadata, not part of the mod version. A loader segment such as `-fabric` is only needed when the project ships multiple loaders; this project is Fabric-only.
 
 Upgrading from 1.1.0: replace the jar. The old objective is migrated automatically; a config file is generated on first start. The command was renamed from `/minedcount` to `/minedcounter`. If an older build already counted invalid or creative breaks, run `/minedcounter init` once after upgrading to rebuild from vanilla stats.
 
@@ -516,13 +583,13 @@ Command feedback is Chinese for `zh_*` clients and English otherwise. Console/RC
 
 | Item | Version |
 | --- | --- |
-| Minecraft | 26.1.2 |
-| Fabric Loader | 0.19.2+ |
-| Fabric API | any 26.1.2 build (developed with 0.149.0+26.1.2) |
-| Java | 21+ |
+| Minecraft | 26.1 / 26.1.1 / 26.1.2 / 26.2 / 26.3, one jar each |
+| Fabric Loader | 26.1.x: 0.19.2+; 26.2 / 26.3: 0.20.1+ |
+| Fabric API | 26.1.x: 0.155.3+26.1.2; 26.2: 0.161.0+26.2; 26.3: 0.167.0+26.3 |
+| Java | 25+ |
 | Side | server / singleplayer |
 
-The mod owns the configured display slot and will conflict with other scoreboard mods using the same slot. Only block breaks are counted; explosions and pistons are ignored. Survival only counts valid harvests, matching vanilla statistics.
+The mod owns the configured display slot and will conflict with other scoreboard mods using the same slot. Only block breaks are counted; explosions and pistons are ignored. Survival only counts valid harvests, matching vanilla statistics. All five targets compile from the same sources; run a smoke test on 26.2/26.3 before publishing.
 
 ## Fake players and case sensitivity
 
@@ -536,13 +603,13 @@ Use a fake-player name that differs by more than case (for example `bot_galaxy`)
 
 ## Build
 
-No Gradle/Loom: the 26.1.2 production jar ships with Mojang class names, so plain `javac` works.
+No Gradle/Loom: all 26.x production jars ship with Mojang class names, so plain `javac` works.
 
 ```powershell
-.\build.ps1 -GameDir "C:\...\versions\26.1.2-Fabric 0.19.2" -JdkHome "C:\...\jdk-21"
+.\build-versions.ps1
 ```
 
-Output: `dist/mined-counter-1.2.0.jar`.
+Output: `dist/mined-counter-1.2.0+<minecraft>.jar` for every target in `versions.json`. The legacy `build.ps1` builds only the local 26.1.2 package.
 
 ## Alternatives
 
