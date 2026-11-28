@@ -10,7 +10,7 @@
 
 目标版本：**Minecraft 26.1 – 26.3**，Fabric Loader **0.19.2+ / 0.20.1+**，Java **25+**。每个 Minecraft 版本有独立 jar，详见下方版本矩阵。
 
-> 当前开发版本 **1.2.0**。1.1.0 的下载与历史仍在 [Releases](https://github.com/Galaxy-1118/mined-counter/releases)。
+> 当前版本 **1.2.1**。1.1.0 的下载与历史仍在 [Releases](https://github.com/Galaxy-1118/mined-counter/releases)。
 
 ---
 
@@ -56,11 +56,11 @@ scoreboard objectives add stone_mined minecraft.mined:minecraft.stone
 
 | Minecraft | Fabric Loader | Fabric API | jar |
 | --- | --- | --- | --- |
-| 26.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.jar` |
-| 26.1.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.1.jar` |
-| 26.1.2 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.2.jar` |
-| 26.2 | 0.20.1+ | 0.161.0+26.2 | `mined-counter-1.2.0+26.2.jar` |
-| 26.3 | 0.20.1+ | 0.167.0+26.3 | `mined-counter-1.2.0+26.3.jar` |
+| 26.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.jar` |
+| 26.1.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.1.jar` |
+| 26.1.2 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.2.jar` |
+| 26.2 | 0.20.1+ | 0.161.0+26.2 | `mined-counter-1.2.1+26.2.jar` |
+| 26.3 | 0.20.1+ | 0.167.0+26.3 | `mined-counter-1.2.1+26.3.jar` |
 
 26.1 / 26.1.1 / 26.1.2 使用同一份代码和 Fabric API 构建；26.1 的 jar 覆盖整个 26.1.x，26.1.1 / 26.1.2 的 jar 从对应补丁版本起兼容。建议按你的精确版本选择对应文件。完整文件清单和 SHA-256 见 [docs/versions.md](docs/versions.md)。
 
@@ -70,7 +70,7 @@ scoreboard objectives add stone_mined minecraft.mined:minecraft.stone
 
 ```text
 mined-counter-<模组版本>+<Minecraft版本>.jar
-mined-counter-1.2.0+26.1.2.jar
+mined-counter-1.2.1+26.1.2.jar
 ```
 
 - `mined-counter`：模组名，使用小写和连字符；
@@ -88,7 +88,7 @@ server/
 │   └── mined_counter.json      # 首次启动自动生成
 └── mods/
     ├── fabric-api-0.155.3+26.1.2.jar
-    └── mined-counter-1.2.0+26.1.2.jar
+    └── mined-counter-1.2.1+26.1.2.jar
 ```
 
 启动成功后，日志里会出现：
@@ -317,11 +317,11 @@ ServerPlayer.hasCorrectToolForDrops(state) == true
 脚本读取 `versions.json`，默认从 `D:\Deepseek Harness\mc-versions` 取各版本依赖，输出：
 
 ```text
-dist/mined-counter-1.2.0+26.1.jar
-dist/mined-counter-1.2.0+26.1.1.jar
-dist/mined-counter-1.2.0+26.1.2.jar
-dist/mined-counter-1.2.0+26.2.jar
-dist/mined-counter-1.2.0+26.3.jar
+dist/mined-counter-1.2.1+26.1.jar
+dist/mined-counter-1.2.1+26.1.1.jar
+dist/mined-counter-1.2.1+26.1.2.jar
+dist/mined-counter-1.2.1+26.2.jar
+dist/mined-counter-1.2.1+26.3.jar
 ```
 
 每个版本目录需要：
@@ -339,7 +339,7 @@ mc-versions/<minecraft>/
 .\build.ps1 -GameDir "E:\MCPCL\PCL 2.12.7.3\.minecraft\versions\26.1.2-Fabric 0.19.2" -JdkHome "D:\JDK25"
 ```
 
-输出：`dist/mined-counter-1.2.0.jar`
+输出：`dist/mined-counter-1.2.1.jar`
 
 ### 目录结构
 
@@ -364,7 +364,7 @@ mined-counter/
 ├── dist/
 │   ├── mined-counter-1.1.0.jar
 │   ├── mined-counter-1.2.0.jar          # 旧版单版本包
-│   └── mined-counter-1.2.0+26.*.jar     # 多版本包
+│   └── mined-counter-1.2.1+26.*.jar     # 多版本包
 ├── CHANGELOG.md
 └── LICENSE
 ```
@@ -375,7 +375,7 @@ mined-counter/
 2. 运行 `.\build-versions.ps1` 生成全部 26.x jar。
 3. 在 `.github/release-notes/` 新建与 tag 同名的说明文件。
 4. 提交并推送 `main`。
-5. 打 tag 并推送：`git tag v1.2.0`、`git push origin v1.2.0`。
+5. 打 tag 并推送：`git tag v1.2.1`、`git push origin v1.2.1`。
 6. GitHub Actions 会自动创建 Release，并上传与 tag 匹配的 `dist/mined-counter-<version>+*.jar`。
 
 ## 已知限制
@@ -467,11 +467,11 @@ Target: **Minecraft 26.1 – 26.3**, Fabric Loader **0.19.2+ / 0.20.1+**, Java *
 
 | Minecraft | Fabric Loader | Fabric API | jar |
 | --- | --- | --- | --- |
-| 26.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.jar` |
-| 26.1.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.1.jar` |
-| 26.1.2 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.2.jar` |
-| 26.2 | 0.20.1+ | 0.161.0+26.2 | `mined-counter-1.2.0+26.2.jar` |
-| 26.3 | 0.20.1+ | 0.167.0+26.3 | `mined-counter-1.2.0+26.3.jar` |
+| 26.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.jar` |
+| 26.1.1 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.1.jar` |
+| 26.1.2 | 0.19.2+ | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.2.jar` |
+| 26.2 | 0.20.1+ | 0.161.0+26.2 | `mined-counter-1.2.1+26.2.jar` |
+| 26.3 | 0.20.1+ | 0.167.0+26.3 | `mined-counter-1.2.1+26.3.jar` |
 
 File naming follows the common Fabric convention `mined-counter-<modversion>+<minecraft>.jar`, the same pattern used by Fabric API, Sodium and Lithium. The `+26.1.2` suffix is SemVer build metadata, not part of the mod version. A loader segment such as `-fabric` is only needed when the project ships multiple loaders; this project is Fabric-only.
 
@@ -609,7 +609,7 @@ No Gradle/Loom: all 26.x production jars ship with Mojang class names, so plain 
 .\build-versions.ps1
 ```
 
-Output: `dist/mined-counter-1.2.0+<minecraft>.jar` for every target in `versions.json`. The legacy `build.ps1` builds only the local 26.1.2 package.
+Output: `dist/mined-counter-1.2.1+<minecraft>.jar` for every target in `versions.json`. The legacy `build.ps1` builds only the local 26.1.2 package.
 
 ## Alternatives
 

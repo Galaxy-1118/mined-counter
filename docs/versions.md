@@ -1,14 +1,14 @@
 # 26.x 版本清单
 
-构建日期：2026-11-28。模组版本保持 **1.2.0**，文件名使用 `mined-counter-1.2.0+<Minecraft版本>.jar`。
+构建日期：2026-11-28。当前模组版本 **1.2.1**，文件名使用 `mined-counter-1.2.1+<Minecraft版本>.jar`。
 
 | Minecraft | Fabric Loader | Fabric API | 文件 | SHA-256 |
 | --- | --- | --- | --- | --- |
-| 26.1 | 0.19.2 | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.jar` | `dbe0517b80300b258642f34f5f063ecc7bc0fa2111d2a30905f6ae6533cb73f6` |
-| 26.1.1 | 0.19.2 | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.1.jar` | `d8a77760be5d6b65f9e3e044a32a746457c8159de923495d979b220fd54acb4c` |
-| 26.1.2 | 0.19.2 | 0.155.3+26.1.2 | `mined-counter-1.2.0+26.1.2.jar` | `c038fb3a4953e24f8b58d92b62603495b6f1c50666a7d1adc20ddfe0c4c316ff` |
-| 26.2 | 0.20.1 | 0.161.0+26.2 | `mined-counter-1.2.0+26.2.jar` | `42e35825ee7c984cf22f01c025de0a8c880bb32726eba60474afb92f96d3c2f5` |
-| 26.3 | 0.20.1 | 0.167.0+26.3 | `mined-counter-1.2.0+26.3.jar` | `28d9820d4b91e8640f452a8dd796bde40fbd466cc5597b15d2d8a2d5b4fe21f9` |
+| 26.1 | 0.19.2 | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.jar` | `7db7b7dd18be7a78b826fa6a361c5e92733216742d687c63ef080bb93d96593c` |
+| 26.1.1 | 0.19.2 | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.1.jar` | `f8796c1b87b0de23b4253c6996a33d3f4711fd264549c7201999b99709b3687d` |
+| 26.1.2 | 0.19.2 | 0.155.3+26.1.2 | `mined-counter-1.2.1+26.1.2.jar` | `afa9a04336e2ae0b61d10a979d439be2556539758a2c8e894cc90fca0655a8e3` |
+| 26.2 | 0.20.1 | 0.161.0+26.2 | `mined-counter-1.2.1+26.2.jar` | `d276c01dcedfd49b8f892e5e756e92d0edde2d1456561e9ae828b45028cd7db3` |
+| 26.3 | 0.20.1 | 0.167.0+26.3 | `mined-counter-1.2.1+26.3.jar` | `971457d2f362433cb0085925adf084568560904bae3e75e851f14b1e8fa25fa8` |
 
 ## 说明
 
@@ -21,7 +21,7 @@
 
 ```text
 mined-counter-<modversion>+<minecraft>.jar
-mined-counter-1.2.0+26.1.2.jar
+mined-counter-1.2.1+26.1.2.jar
 ```
 
 `+` 后面是 SemVer build metadata，不是模组版本的一部分；Fabric API、Sodium、Lithium 等使用相同习惯。只有同时发布多个加载器时才需要 `-fabric` / `-neoforge` 段，本模组目前仅 Fabric。
@@ -41,4 +41,8 @@ mined-counter-1.2.0+26.1.2.jar
 └── fabric-api.jar
 ```
 
-当前 GitHub 的 `v1.2.0` Release 是最初的单版本 26.1.2 包；上述 5 个 jar 是本地多版本构建产物，尚未上传。发布时可以选择追加到现有 `v1.2.0` Release，或按新的模组版本创建 `v1.2.1`/`v1.3.0` Release。
+## 发布状态
+
+- `v1.2.1`：26.1 – 26.3 多版本发布，包含上表 5 个 jar。
+- `v1.2.0`：保留的旧单版本发布（仅 26.1.2 的 `mined-counter-1.2.0.jar`）。
+- 两个 Release 都保留，方便旧用户继续下载。

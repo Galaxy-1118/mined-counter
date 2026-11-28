@@ -22,7 +22,7 @@ param(
     [string]$ArtifactsRoot = 'D:\Deepseek Harness\mc-versions',
     [string]$LibraryRoot = 'E:\MCPCL\PCL 2.12.7.3\.minecraft\libraries',
     [string]$JdkHome = 'D:\JDK25',
-    [string]$ModVersion = '1.2.0',
+    [string]$ModVersion = '1.2.1',
     [string]$BuildRoot = (Join-Path $PSScriptRoot 'build-versions'),
     [string]$OutputDir = (Join-Path $PSScriptRoot 'dist')
 )
@@ -132,9 +132,9 @@ foreach ($target in $targets) {
 
     Copy-Item -Path (Join-Path $PSScriptRoot 'src\main\resources\*') -Destination $classes -Recurse -Force
 
-    $modVersion = "$ModVersion+$mc"
+    $fullVersion = "$ModVersion+$mc"
     $meta = $template
-    $meta = $meta -replace '"version"\s*:\s*"[^"]*"', ('"version": "' + $modVersion + '"')
+    $meta = $meta -replace '"version"\s*:\s*"[^"]*"', ('"version": "' + $fullVersion + '"')
     $meta = $meta -replace '"minecraft"\s*:\s*"[^"]*"', ('"minecraft": "' + $target.minecraftRange + '"')
     $meta = $meta -replace '"fabricloader"\s*:\s*"[^"]*"', ('"fabricloader": "' + $target.loaderRange + '"')
     [IO.File]::WriteAllText((Join-Path $classes 'fabric.mod.json'), $meta, $utf8)
